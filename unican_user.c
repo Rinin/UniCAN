@@ -1,10 +1,11 @@
 #include "unican.h"
+//TODO:Check all this terrible english comments
 /*
 This function could be implemented in any way, but as
 result user programm should call receive_can_message()
 with valid can_message structures provided.
 Function name and parameters are not mandatory, but 
-shold be changed in unican.h accordingly
+shold be changed in unican_user.h accordingly
 */
 void can_HW_receive_message (void)
 {
@@ -30,12 +31,11 @@ void can_HW_send_message (can_message* msg)
 /*
 This function should perform required software
 reaction to unican message received from another
-device  
+device.
 */
 void unican_proceed_message (unican_message* msg)
 {
   /* User code */
   
   /*end of user code*/
-  unican_drop_msg(msg);
 }
