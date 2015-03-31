@@ -50,14 +50,14 @@ typedef struct tag_unican_buffer
   uint16 position; //Current position in buffer
 }  __attribute__ ((packed)) unican_buffer;
 
-uint16 unican_init (void);
+void unican_init (void);
 
 void can_HW_send_message (can_message* msg); //HW implementation
 
 uint16 can_receive_message (can_message* msg);
 inline void can_send_message (can_message* msg); 
 
-void unican_proceed_message (unican_message* msg);
+void unican_RX_message (unican_message* msg);
 void unican_send_message (unican_message* msg);
 
 void unican_drop_message(unican_message* msg);

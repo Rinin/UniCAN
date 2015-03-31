@@ -28,14 +28,46 @@ void can_HW_send_message (can_message* msg)
   
   /*end of user code*/
 }
+
 /*
-This function should perform required software
-reaction to unican message received from another
-device.
+This event occures when valid unican message received
+it's calls from within can_receive_message () so if
+can_receive_message () called in interrupt handler
+you will not want to do a lot of work here
 */
-void unican_proceed_message (unican_message* msg)
+void unican_RX_event (uint16 msg_id, uint16 length)
 {
   /* User code */
   
   /*end of user code*/
 }
+
+/*
+This function should perform required software
+reaction to unican message received from another
+device.
+*/
+void unican_RX_message (unican_message* msg)
+{
+  /* User code */
+  
+  /*end of user code*/
+}
+
+/*
+This is example of user code
+
+void main (void)
+{
+  unican_init();
+  uint8 tempBuffer[11] = {'H','e','l','l','o',' ','W','o','r','l','d'};  
+  unican_message tx_msg;
+  
+  tx_msg.unican_msg_id = 0xAA55;//some MSG_ID which is expected by receiver
+  tx_msg.unican_address_from = 0x01;//our unican address eample
+  tx_msg.unican_address_to = 0x02;//unican address of receiver example
+  tx_msg.unican_length = sizeof(tempBuffer);
+  tx_msg.data = tempBuffer;
+  tx_msg.next_msg = NULL;  
+}
+*/
