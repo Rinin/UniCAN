@@ -1,6 +1,6 @@
 #include "unican.h"
-//TODO: Check if unican online or not
-//TODO: Add define for CRC
+
+//TODO: Test on application
 
 static unican_status state;
 static unican_buffer unican_rx_buffers [UNICAN_RX_BUFFERS_COUNT];
@@ -58,13 +58,22 @@ uint16 crc16(uint8 *buf, uint16 len)
 /*
 Frees memory allocated for message;
 */
-void unican_drop_message(unican_message* msg)
+void unican_drop_node(unican_node* node)
 {
-  if (msg != NULL)
+  if (node != NULL)
   {
-    state.free_space += msg->unican_length+sizeof(unican_message);
-    free(msg->data);
-    free(msg);
+    if (node->value != NULL)
+    {
+      if (node->value->data != NULL)
+      {
+        free(node->value->data);
+        state.free_space += node->value->unican_length;
+      }
+      free(node->value);
+      state.free_space +=sizeof(unican_message);
+    }
+    free(node);
+    state.free_space +=sizeof(unican_node);
   }
 }
 
@@ -73,14 +82,14 @@ void unican_drop_message(unican_message* msg)
 */
 static void unican_flush_queue(void)
 {
-unican_message* current;
+unican_node* current;
   while (state.first != NULL)
   {
     current = state.first;
-    state.first = state.first->next_msg;
-    unican_drop_message(current);
+    state.first = state.first->next_node;
+    unican_drop_node(current);
   }
-  state.messages_count = 0;
+  state.nodes_count = 0;
   state.first = NULL;
   state.last = NULL;           
 }
@@ -93,44 +102,56 @@ void unican_init (void)
   uint16 i;  
   for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
   {
-    unican_rx_buffers[i].umsg = NULL;
+    unican_rx_buffers[i].node = NULL;
     unican_rx_buffers[i].position = 0;
     unican_rx_buffers[i].crc = 0;
   }
-  state.is_online = 1;
+  state.is_online = UNICAN_ENABLED;
   unican_flush_queue();
   state.free_space = UNICAN_ALLOWED_SPACE;  
   state.free_buffers_count = UNICAN_RX_BUFFERS_COUNT;
+  
+  can_HW_init();
 }
 
 /*
-Allocate memory for new unican_message
+Allocate memory for new node with unican_message
 */
-inline static unican_message* unican_allocate_message(uint16 msg_id, uint16 from, uint16 to, uint16 data_len)
+static unican_node* unican_allocate_node(uint16 msg_id, uint16 from, uint16 to, uint16 data_len)
 {
-  if (state.free_space > data_len+sizeof(unican_message))
-    return NULL;
-  else
+  if (state.is_online == UNICAN_ENABLED)
   {
-  unican_message* temp_msg;
-  temp_msg = malloc (sizeof(unican_message));
-  if (temp_msg == NULL)
-    return NULL;
-  
-  temp_msg->unican_msg_id = msg_id;
-  temp_msg->unican_address_from = from;
-  temp_msg->unican_address_to = to;
-  temp_msg->unican_length = data_len;
-  temp_msg->data = malloc (data_len);
-  if (temp_msg->data == NULL)
-  {
-    free(temp_msg);
-    return NULL; 
-  } 
-  temp_msg->next_msg = NULL;
-  state.free_space -= (data_len+sizeof(unican_message));
-  return temp_msg;
+    if (state.free_space < data_len+sizeof(unican_message)+sizeof(unican_node))
+      return NULL;
+    else
+    {
+      unican_node* temp_node;
+      temp_node = (unican_node*)malloc (sizeof(unican_node));
+
+      unican_message* temp_msg;
+      temp_msg = (unican_message*)malloc (sizeof(unican_message));
+
+      if (temp_msg == NULL)
+        return NULL;
+
+      temp_msg->unican_msg_id = msg_id;
+      temp_msg->unican_address_from = from;
+      temp_msg->unican_address_to = to;
+      temp_msg->unican_length = data_len;
+      temp_msg->data = (uint8*)malloc (data_len);
+      if (temp_msg->data == NULL)
+      {
+        free(temp_msg);
+        return NULL;
+      }
+      temp_node->value = temp_msg;
+      temp_node->next_node = NULL;
+      state.free_space -= (data_len+sizeof(unican_message)+sizeof(unican_node));
+      return temp_node;
+    }
   }
+  else
+    return NULL;
 }
 
         
@@ -143,17 +164,18 @@ static unican_buffer* unican_find_buffer (uint16 address_from)
   uint16 i;
   unican_buffer* free_buffer;
   free_buffer = NULL;
-  
-  for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
-    if (unican_rx_buffers[i].umsg != NULL)
-    {
-      if (unican_rx_buffers[i].umsg->unican_address_from == address_from)
-        return &(unican_rx_buffers[i]);
-    }
-    else
-      if (free_buffer == NULL)
-        free_buffer = &(unican_rx_buffers[i]);
-      
+  if (state.is_online == UNICAN_ENABLED)
+  {
+    for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
+      if (unican_rx_buffers[i].node != NULL)
+      {
+        if (unican_rx_buffers[i].node->value->unican_address_from == address_from)
+          return &(unican_rx_buffers[i]);
+      }
+      else
+        if (free_buffer == NULL)
+          free_buffer = &(unican_rx_buffers[i]);
+  }
   return free_buffer;
 }
 
@@ -177,165 +199,325 @@ static uint16 can_check_message (can_message* msg)
 /*
 Saves valid unican messages for further use
 */
-static void unican_save_message (unican_message* umsg)
+static void unican_save_node (unican_node* node)
 {
 //TODO:IMPLEMENT QUEUE!
-  if (state.last == NULL)
-      state.last = umsg;
-    else
-      state.last->next_msg = umsg;
-  state.messages_count++;
-  unican_RX_event (umsg->unican_msg_id, umsg->unican_length);
-}
-
-/*
-Collects unican message, sends it to user and clears 
-used buffer
-*/
-static uint16 unican_collect_buffer(unican_buffer* buff)
-{
-  uint16 retval = UNICAN_OK;
-  uint16 crc;
-  crc = crc16(buff->umsg->data, buff->umsg->unican_length);
-  if (buff->crc == crc)
-    unican_save_message(buff->umsg);
-  else
-    retval = UNICAN_WRONG_CRC;
-  buff->umsg = NULL;
-  buff->crc = 0x0000;
-  buff->position = 0;
-  state.free_buffers_count++;
-  return retval;
-}
-
-/*
-Processes single received CAN message 
-*/
-
-uint16 can_receive_message (can_message* msg)
-{
-  unican_buffer* buff;
-  //Reading CAN identifier feilds
-  uint16 address_to = 0;
-  uint16 address_from = 0;
-  uint8 data_bit = 0;
-  uint16 i;
-  uint16 retval;
-  retval = UNICAN_OK;
-  
-  if (msg->can_extbit == 0) 
+  if (state.is_online == UNICAN_ENABLED)
   {
-    address_to = (msg->can_identifier & 0x1F);
-    address_from = (msg->can_identifier & 0x3E0)>>5;
-    data_bit = (msg->can_identifier & 0x400)>>10;
-  }
-  else
-  {
-    address_to = (msg->can_identifier & 0x3FFF);
-    address_from = (msg->can_identifier & 0xFFFC000)>>14;
-    data_bit = (msg->can_identifier & 0x10000000)>>28;
-  }
-  //Done with CAN identifier feilds
-  //Checking message
-  uint16 errcode;
-  errcode = can_check_message(msg);
-  if (errcode != UNICAN_OK)
-    return errcode;
-  //Done with checking
-  
-  //Receive Logic:
-  
-  //Appending pure data to buffer
-  if (data_bit == 1)  
-  {
-    buff = unican_find_buffer(address_from);
-    if (buff == NULL)
-      return UNICAN_DATA_WITHOUT_START;
-    else if (buff->umsg == NULL)
-      return UNICAN_DATA_WITHOUT_START;
-    else
-    {
-      for (i=0 ; i < msg->can_dlc ; i++)
-      {
-        if (buff->position < buff->umsg->unican_length)
-        {
-          buff->umsg->data[buff->position] = msg->data[i];
-          buff->position++;
+      if (state.last == NULL)
+        if (state.first == NULL)
+        {      
+          state.first = node;
+          state.last = node;
         }
         else
         {
+          //It's error actually TODO:inform about it;
+          unican_node* temp_node;
+          temp_node = state.first->next_node;
+          while (!(temp_node->next_node == NULL))
+            temp_node = temp_node->next_node;
+          temp_node->next_node = node;
+          state.last = node;
+        }
+      else
+      {
+        state.last->next_node = node;
+        state.last = node;
+      }
+      
+      state.nodes_count++;
+      unican_RX_event (node->value->unican_msg_id, node->value->unican_length);
+    }
+  }
+
+  /*
+  Collects unican message, sends it to user and clears 
+  used buffer.
+  */
+  static void unican_collect_buffer(unican_buffer* buff)
+  {
+    if (state.is_online == UNICAN_ENABLED)
+    {
+      uint16 crc;
+      crc = crc16(buff->node->value->data, buff->node->value->unican_length);
+      if (buff->crc == crc)
+        unican_save_node(buff->node);
+      else
+        unican_error(UNICAN_WRONG_CRC);
+      buff->node = NULL;
+      buff->crc = 0x0000;
+      buff->position = 0;
+      state.free_buffers_count++;
+    }
+    else
+      unican_error(UNICAN_OFFLINE);
+  }
+
+  /*
+  Processes single received CAN message 
+  */
+
+  void can_receive_message (can_message* msg)
+  {
+
+  if (state.is_online == UNICAN_ENABLED)
+  {
+    unican_buffer* buff;
+    //Reading CAN identifier feilds
+    uint16 address_to = 0;
+    uint16 address_from = 0;
+    uint8 data_bit = 0;
+    uint16 i;
+    uint16 retval;
+    retval = UNICAN_OK;
+    
+    if (msg->can_extbit == 0) 
+    {
+      address_to = (msg->can_identifier & 0x1F);
+      address_from = (msg->can_identifier & 0x3E0)>>5;
+      data_bit = (msg->can_identifier & 0x400)>>10;
+    }
+    else
+    {
+      address_to = (msg->can_identifier & 0x3FFF);
+      address_from = (msg->can_identifier & 0xFFFC000)>>14;
+      data_bit = (msg->can_identifier & 0x10000000)>>28;
+    }
+    printf("Addres_to = %d Addres_from = %d, data_bit = %d \n ", address_to, address_from, data_bit );
+    //Done with CAN identifier feilds
+    //Checking message
+    uint16 errcode;
+    errcode = can_check_message(msg);
+    if (errcode != UNICAN_OK)
+      {
+        unican_error(errcode);
+        return;
+      }
+    //Done with checking
+    
+    //Receive Logic:
+
+    //Appending pure data to buffer
+    if (data_bit == 1)  
+    {
+      buff = unican_find_buffer(address_from);
+      if (buff == NULL)
+        {
+          unican_error(UNICAN_DATA_WITHOUT_START);
+          return;
+        }
+      else if (buff->node == NULL)
+        {
+          unican_error(UNICAN_DATA_WITHOUT_START);
+          return;
+        }
+      else
+      {
+        printf("normal message with data\n");
+        for (i=0 ; i < msg->can_dlc ; i++)
+        {
+          if (buff->position < buff->node->value->unican_length)
+          {
+            buff->node->value->data[buff->position] = msg->data[i];
+            buff->position++;
+          }
+          else
+          {
+            unican_collect_buffer(buff);
+            unican_error(UNICAN_WARNING_UNEXPECTED_DATA);
+            return;//and what to do with buffer?
+          }
+        }
+        if (buff->node->value->unican_length == buff->position)
+        {
           unican_collect_buffer(buff);
-          return UNICAN_WARNING_UNEXPECTED_DATA;//and what to do with buffer?
         }
       }
-      if (buff->umsg->unican_length == buff->position)
-        unican_collect_buffer(buff);
     }
+    //Done with appending pure data to buffer
+    //Processing some short commands
+    else
+    {
+      //printf("message with command\n");
+      uint16 msg_id;
+      if (msg->can_dlc >= CAN_MIN_DLC)
+        msg_id = msg->data[0] + (msg->data[1] * 256); 
+      else
+      {
+        unican_error(UNICAN_CAN_MESSAGE_TOO_SHORT);
+        return ;
+      }
+
+      
+      switch (msg_id)
+      {
+        //Some protocol-specific short messages
+        case UNICAN_START_LONG_MESSAGE:
+        {
+          printf("Start of transmission\n");
+          if (msg->can_dlc < UNICAN_HEADER_SIZE)
+          {
+            unican_error(UNICAN_HEADER_TOO_SHORT);
+            return;
+          }
+          buff = unican_find_buffer(address_from);
+          if (buff == NULL)
+          {
+            unican_error(UNICAN_NO_FREE_BUFFER);
+            return;
+          }
+          else 
+          {
+            if (buff->node != NULL)
+            {         
+              unican_drop_node(buff->node);
+              unican_error(UNICAN_WARNING_BUFFER_OVERWRITE);
+            }
+            uint16 msg_subid = msg->data[2] + (msg->data[3] * 256);
+            uint16 data_length = msg->data[6] + (msg->data[7] * 256);          
+            buff->node = unican_allocate_node(msg_subid, address_from, address_to, data_length);
+            if (buff->node == NULL)
+            {
+              unican_error(UNICAN_CANT_ALLOCATE_NODE);
+              return;
+            }
+            state.free_buffers_count--;
+            buff->crc = msg->data[4] + (msg->data[5] * 256);
+            buff->position = 0;
+          }
+          
+        } break;
+        //Done with protocol-specific short messages
+        //Regular short messages
+        default:
+        {
+          printf("Standart command\n");
+          unican_node* temp_node;
+          temp_node = unican_allocate_node(msg_id, address_from, address_to, msg->can_dlc - CAN_MIN_DLC);
+          if (temp_node == NULL)
+          {
+            unican_error(UNICAN_CANT_ALLOCATE_NODE);
+            return;
+          }
+          for ( i = 0; i<temp_node->value->unican_length; i++)
+            temp_node->value->data[i]=msg->data[i+CAN_MIN_DLC];
+            
+          unican_save_node (temp_node);
+
+        } break;
+        //Done with regular short messages
+      }
+    }
+    //Done with short commands
   }
-  //Done with appending pure data to buffer
-  //Processing some short commands
+  else
+    unican_error(UNICAN_OFFLINE);
+}
+
+
+
+static void can_set_identifier(unican_message* msg, can_message* can_buff, uint8 data_bit)
+{
+  if ((msg->unican_address_from > 31) || (msg->unican_address_to > 31))
+  {
+    can_buff->can_extbit = CAN_EXTENDED_HEADER;
+    can_buff->can_identifier = 0x00;
+    can_buff->can_identifier |= msg->unican_address_to;
+    can_buff->can_identifier |= msg->unican_address_from << 14;
+    if (data_bit != 0)
+      can_buff->can_identifier |= 1 << 28;    
+  }
   else
   {
-    uint16 msg_id;
-    if (msg->can_dlc >= CAN_MIN_DLC)
-      msg_id = msg->data[0] + (msg->data[1] * 256); 
-    else
-      return UNICAN_CAN_MESSAGE_TOO_SHORT;
-    
-    switch (msg_id)
+    can_buff->can_extbit = CAN_STANDART_HEADER;
+    can_buff->can_identifier = 0x00;
+    can_buff->can_identifier |= msg->unican_address_to;
+    can_buff->can_identifier |= msg->unican_address_from << 5;
+    if (data_bit != 0)
+      can_buff->can_identifier |= 1 << 10; 
+  }
+}
+
+void unican_take_message (void)
+{
+  if ((state.nodes_count > 0) & (state.first != NULL))
+  {
+    unican_node* next = state.first->next_node;
+    unican_RX_message (state.first->value);
+    unican_drop_node(state.first);
+    state.first = next;
+
+    state.nodes_count-=1;
+    if (state.nodes_count <= 0)
     {
-      //Some protocol-specific short messages
-      case UNICAN_START_LONG_MESSAGE:
-      {
-        if (msg->can_dlc < UNICAN_HEADER_SIZE)
-          return UNICAN_HEADER_TOO_SHORT;
-          
-        buff = unican_find_buffer(address_from);
-        if (buff == NULL)
-          return UNICAN_NO_FREE_BUFFER;
-        else 
-        {
-          if (buff->umsg != NULL) 
-          {         
-            unican_drop_message(buff->umsg);
-            retval = UNICAN_WARNING_BUFFER_OVERWRITE;
-          }
-          uint16 msg_subid = msg->data[2] + (msg->data[3] * 256);
-          uint16 data_length = msg->data[6] + (msg->data[7] * 256);          
-          buff->umsg = unican_allocate_message(msg_subid, address_from, address_to, data_length);
-          if (buff->umsg == NULL)          
-            return UNICAN_CANT_ALLOCATE_MESSAGE;//FIXME:Here we have a chance to ignore retval
-          state.free_buffers_count--;
-          buff->crc = msg->data[4] + (msg->data[5] * 256);
-          buff->position = 0;
-        }
-        
-      } break;
-      //Done with protocol-specific short messages
-      //Regular short messages
-      default:
-      {        
-        unican_message* temp_msg;
-        temp_msg = unican_allocate_message(msg_id, address_from, address_to, msg->can_dlc - CAN_MIN_DLC);
-        if (temp_msg == NULL)
-          return UNICAN_CANT_ALLOCATE_MESSAGE;
-        
-        for ( i = 0; i<temp_msg->unican_length; i++)
-          temp_msg->data[i]=msg->data[i+CAN_MIN_DLC];
-          
-        unican_save_message (temp_msg);          
-          
-      } break;
-      //Done with regular short messages
+      state.last = NULL;
+      state.first = NULL;
     }
   }
-  //Done with short commands
-  return retval;
 }
 
-inline void can_send_message (can_message* msg)
+void unican_send_message (unican_message* msg)
 {
-  can_HW_send_message (msg);
+  can_message can_buff;
+  uint i;
+  if (state.is_online == UNICAN_ENABLED)
+  {
+    can_buff.can_rtr = 0;    
+    if (msg->unican_length < 7)
+    {
+      can_set_identifier(msg, &can_buff, 0);
+      can_buff.can_dlc = msg->unican_length + CAN_MIN_DLC;
+      can_buff.data[0]=(msg->unican_msg_id & 0x00FF);
+      can_buff.data[1]=((msg->unican_msg_id >> 8) & 0x00FF);
+      for (i = 0; i < msg->unican_length; i++)
+        can_buff.data[i+2] = msg->data[i];      
+      can_send_message (&can_buff);
+    }
+    else
+    {
+      uint16 crc;
+      can_set_identifier(msg, &can_buff, 0);
+      can_buff.can_dlc = 8;      
+      can_buff.data[0] = UINT16RIGHT ( UNICAN_START_LONG_MESSAGE );
+      can_buff.data[1] = UINT16LEFT ( UNICAN_START_LONG_MESSAGE );
+      can_buff.data[2] = UINT16RIGHT ( msg->unican_msg_id );
+      can_buff.data[3] = UINT16LEFT ( msg->unican_msg_id );
+      crc = crc16( msg->data, msg->unican_length );
+      can_buff.data[4] = UINT16RIGHT ( crc );
+      can_buff.data[5] = UINT16LEFT ( crc );
+      can_buff.data[6] = UINT16RIGHT ( msg->unican_length );
+      can_buff.data[7] = UINT16LEFT ( msg->unican_length );
+
+      can_send_message (&can_buff);
+      
+      can_set_identifier(msg, &can_buff, 1);  //could be optimized
+      for (i = 0; i < msg->unican_length; i++)
+      {        
+        can_buff.data[i%8] = msg->data[i];
+        if (i % 8 ==7)
+          can_send_message (&can_buff);
+      }
+      if ( i % 8 > 0)//something left
+      {
+        can_buff.can_dlc = i % 8;
+        can_send_message (&can_buff);
+      }      
+    }
+  }
 }
 
+void can_send_message (can_message* msg)
+{
+  if (state.is_online == UNICAN_ENABLED)
+  {
+    can_HW_send_message (msg);
+  }
+}
 
+void unican_close (void)
+{
+  state.is_online = UNICAN_DISABLED;
+  unican_flush_queue();
+  can_HW_close();
+}
