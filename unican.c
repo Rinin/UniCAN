@@ -239,8 +239,13 @@ static void unican_save_node (unican_node* node)
   {
     if (state.is_online == UNICAN_ENABLED)
     {
-      uint16 crc;
-      crc = crc16(buff->node->value->data, buff->node->value->unican_length);
+      int len;
+      uint16 crc, calc_crc;
+      len = buff->node->value->unican_length;
+      crc = buff->node->value->data[len-2] + buff->node->value->data[len-1]*256;
+      calc_crc = crc16(buff->node->value->data, len-2);
+      buff->crc= calc_crc;
+      buff->node->value->unican_length = len-2;
       if (buff->crc == crc)
         unican_save_node(buff->node);
       else
@@ -375,7 +380,11 @@ static void unican_save_node (unican_node* node)
               unican_error(UNICAN_WARNING_BUFFER_OVERWRITE);
             }
             uint16 msg_subid = msg->data[2] + (msg->data[3] * 256);
-            uint16 data_length = msg->data[6] + (msg->data[7] * 256);          
+            uint16 data_length = msg->data[4] + (msg->data[5] * 256);          
+            if (data_length < 2) {
+              unican_error(UNICAN_WRONG_CRC);
+              return;
+            }
             buff->node = unican_allocate_node(msg_subid, address_from, address_to, data_length);
             if (buff->node == NULL)
             {
@@ -383,7 +392,6 @@ static void unican_save_node (unican_node* node)
               return;
             }
             state.free_buffers_count--;
-            buff->crc = msg->data[4] + (msg->data[5] * 256);
             buff->position = 0;
           }
           
