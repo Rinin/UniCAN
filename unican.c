@@ -187,7 +187,7 @@ static uint16 can_check_message (can_message* msg)
 {
   if (msg->can_dlc > CAN_MAX_DLC)
     return UNICAN_CAN_MESSAGE_TOO_LONG;
-  else if ((msg->can_identifier > 0x4FF) && (msg->can_extbit == 0))
+  else if ((msg->can_identifier > 0x7FF) && (msg->can_extbit == 0))
     return UNICAN_CAN_IDENTIFIER_TOO_LONG ;
   else if ((msg->can_identifier > 0x1FFFFFFF) && (msg->can_extbit > 0))
     return UNICAN_CAN_IDENTIFIER_EXT_TOO_LONG ;
