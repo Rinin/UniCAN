@@ -243,8 +243,10 @@ static void unican_save_node (unican_node* node)
       crc = crc16(buff->node->value->data, buff->node->value->unican_length);
       if (buff->crc == crc)
         unican_save_node(buff->node);
-      else
+      else {
+        unican_drop_node(buff->node);
         unican_error(UNICAN_WRONG_CRC);
+      }
       buff->node = NULL;
       buff->crc = 0x0000;
       buff->position = 0;
