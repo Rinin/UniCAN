@@ -95,6 +95,22 @@ unican_node* current;
 }
 
 /*
+
+*/
+static void unican_flush_buffers(void)
+{
+  uint16_t i;
+  for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
+  {
+    unican_node *node = unican_rx_buffers[i].node;
+    if (node)
+      unican_drop_node(node);
+    unican_rx_buffers[i].position = 0;
+    unican_rx_buffers[i].crc = 0;
+  }
+}
+
+/*
 Initialization of buffers itself
 */
 void unican_init (void)
@@ -521,5 +537,6 @@ void unican_close (void)
 {
   state.is_online = UNICAN_DISABLED;
   unican_flush_queue();
+  unican_flush_buffers();
   can_HW_close();
 }
