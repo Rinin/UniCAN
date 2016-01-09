@@ -98,7 +98,7 @@ static void usage(const char *prg)
 	printf("  -e\t\t(generate extended (EFF) CAN frames, default is 'no')\n");
 	printf("  -g <ms>\t(inter-frame gap in milli seconds, default is %d ms)\n", G.gap);
 	printf("  -m\t\t(generate mix of SFF and EFF CAN frames, default is 'no')\n");
-	printf("  -M <bytes>\t(MTU of UNICAN messages, default is %d bytes)\n", G.mtu);
+	printf("  -M <bytes>\t(MTU for \"long\" UNICAN messages, default is %d bytes)\n", G.mtu);
 	printf("  -n <count>\t(terminate after <count> UNICAN frames, default infinitive)\n");
 	printf("  -N <number>\t(<number> of simultaneous issuers, default is %d)\n", G.nodes);
 	printf("  -p <percent>\t(specify <percent> of long UNICAN messages, default is %d%%)\n", G.prob);

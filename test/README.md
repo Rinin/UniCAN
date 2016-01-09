@@ -29,7 +29,7 @@ format. Thus, its output can be played then with `canplayer` utility.
 	  -e		(generate extended (EFF) CAN frames, default is 'no')
 	  -g <ms>	(inter-frame gap in milli seconds, default is 1 ms)
 	  -m		(generate mix of SFF and EFF CAN frames, default is 'no')
-	  -M <bytes>	(MTU of UNICAN messages, default is 64 bytes)
+	  -M <bytes>	(MTU for "long" UNICAN messages, default is 64 bytes)
 	  -n <count>	(terminate after <count> UNICAN frames, default infinitive)
 	  -N <number>	(<number> of simultaneous issuers, default is 1)
 	  -p <percent>	(specify <percent> of long UNICAN messages, default is 20%)
