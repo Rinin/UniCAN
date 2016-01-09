@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
 
 #include "linux/can.h"
 #include "lib.h"
@@ -79,12 +78,12 @@ static const uint16_t crc16tab[] = {
 struct Global {
 	int ext;
 	int mix;
-	int rand;
 	unsigned count;
 	unsigned gap;
 	unsigned mtu;
 	unsigned nodes;
 	unsigned prob;
+	uint64_t seed;
 	const char *ifname;
 };
 
@@ -96,14 +95,14 @@ static void usage(const char *prg)
 	printf("Usage: %s [options] <ifname>\n", prg);
 	printf("Options:\n");
 	printf("\n");
-	printf("  -e\t\t(generate extended (EFF) CAN frames, default no)\n");
+	printf("  -e\t\t(generate extended (EFF) CAN frames, default is 'no')\n");
 	printf("  -g <ms>\t(inter-frame gap in milli seconds, default is %d ms)\n", G.gap);
-	printf("  -m\t\t(generate mix of SFF and EFF CAN frames, default no)\n");
+	printf("  -m\t\t(generate mix of SFF and EFF CAN frames, default is 'no')\n");
 	printf("  -M <bytes>\t(MTU of UNICAN messages, default is %d bytes)\n", G.mtu);
 	printf("  -n <count>\t(terminate after <count> UNICAN frames, default infinitive)\n");
 	printf("  -N <number>\t(<number> of simultaneous issuers, default is %d)\n", G.nodes);
 	printf("  -p <percent>\t(specify <percent> of long UNICAN messages, default is %d%%)\n", G.prob);
-	printf("  -r\t\t(seed internal random generator on start, default no)\n");
+	printf("  -s <seed>\t(specify seed to <seed> for PRNG, default is %llu)\n", G.seed);
 	printf("\n");
 
 	exit(1);
@@ -221,8 +220,9 @@ int main(int argc, char *argv[])
 	G.mtu = 64;
 	G.nodes = 1;
 	G.prob = 20;
+	G.seed = 1ULL;
 
-	while ((opt = getopt(argc, argv, "eM:mN:n:p:r")) != -1) {
+	while ((opt = getopt(argc, argv, "eM:mN:n:p:s:")) != -1) {
 		switch (opt) {
 		case 'e':
 			G.ext = 1;
@@ -242,8 +242,8 @@ int main(int argc, char *argv[])
 		case 'p':
 			G.prob = atoi(optarg);
 			break;
-		case 'r':
-			G.rand++;
+		case 's':
+			G.seed = atoll(optarg);
 			break;
 		default:
 			usage(argv[0]);
@@ -264,16 +264,16 @@ int main(int argc, char *argv[])
 	if (!G.nodes)
 		return 0;
 
-	if (G.rand) {
-		struct timeval tv;
-		gettimeofday(&tv, 0);
-		seed_rng64(tv.tv_sec * 1000000 + tv.tv_usec);
-	}
+	seed_rng64(G.seed);
 
 	z = calloc(G.nodes, sizeof(void *));
 	if (!z) {
 		fprintf(stderr, "Out of memory!\n");
 		return 1;
+	}
+
+	for(i=0;i<argc;i++){
+		printf("%s%c", argv[i], i+1==argc? '\n' : ' ');
 	}
 
 	while (G.count > 0) {
