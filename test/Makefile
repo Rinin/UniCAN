@@ -26,7 +26,7 @@ unicanfuzz: unicanfuzz.c
 unicantest: unican.c unicantest.c
 	$(CC) $(CFLAGS) $^ $(LDLIBS) -o $@
 
-unicantest-gprof: unican.c unicantest.c trace.c
+unicantest-gprof: unican.c unicantest.c
 	$(CC) $(CFLAGS) -pg $^ $(LDLIBS) -o $@
 
 # https://balau82.wordpress.com/2010/10/06/trace-and-profile-function-calls-with-gcc/
