@@ -287,8 +287,6 @@ static void unican_save_node (unican_node* node)
     uint16 address_from = 0;
     uint8 data_bit = 0;
     uint16 i;
-    uint16 retval;
-    retval = UNICAN_OK;
     
     if (msg->can_extbit == 0) 
     {
