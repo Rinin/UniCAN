@@ -169,14 +169,3 @@ received UNICAN messages.
 
 		UNICAN error(s): 0
 		UNICAN message(s): 10
-
-## Further testing
-
-### unicantest-gprof
-
-TBD.
-
-### unicantest-trace
-
-TBD.
-
