@@ -25,3 +25,6 @@ unicanfuzz: unicanfuzz.c
 
 unicantest: unican.c unicantest.c
 	$(CC) $(CFLAGS) $^ $(LDLIBS) -o $@
+
+test: all
+	@tclsh test.tcl
