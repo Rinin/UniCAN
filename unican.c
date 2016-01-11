@@ -142,13 +142,17 @@ static unican_node* unican_allocate_node(uint16 msg_id, uint16 from, uint16 to, 
     else
     {
       unican_node* temp_node;
-      temp_node = (unican_node*)malloc (sizeof(unican_node));
-
       unican_message* temp_msg;
-      temp_msg = (unican_message*)malloc (sizeof(unican_message));
 
-      if (temp_msg == NULL)
+      temp_node = (unican_node*)malloc (sizeof(unican_node));
+      if (temp_node == NULL)
         return NULL;
+
+      temp_msg = (unican_message*)malloc (sizeof(unican_message));
+      if (temp_msg == NULL) {
+        free(temp_node);
+        return NULL;
+      }
 
       temp_msg->unican_msg_id = msg_id;
       temp_msg->unican_address_from = from;
@@ -157,6 +161,7 @@ static unican_node* unican_allocate_node(uint16 msg_id, uint16 from, uint16 to, 
       temp_msg->data = (uint8*)malloc (data_len);
       if (temp_msg->data == NULL)
       {
+        free(temp_node);
         free(temp_msg);
         return NULL;
       }
