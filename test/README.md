@@ -117,6 +117,9 @@ received UNICAN messages.
 2. Reject every 500th CAN frame from `unicanfuzz` output with `sed`
 
 		% ./unicanfuzz -n 5000 vcan0 | sed '1~500d' | ./unicantest
+		Error 5 <DATA_WITHOUT_START>
+		Error 5 <DATA_WITHOUT_START>
+		Error 2 <WARNING_BUFFER_OVERWRITE>
 		Error 2 <WARNING_BUFFER_OVERWRITE>
 		Error 2 <WARNING_BUFFER_OVERWRITE>
 		Error 2 <WARNING_BUFFER_OVERWRITE>
@@ -124,22 +127,7 @@ received UNICAN messages.
 		Error 2 <WARNING_BUFFER_OVERWRITE>
 		Error 2 <WARNING_BUFFER_OVERWRITE>
 		Error 2 <WARNING_BUFFER_OVERWRITE>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 2 <WARNING_BUFFER_OVERWRITE>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 5 <DATA_WITHOUT_START>
-		Error 2 <WARNING_BUFFER_OVERWRITE>
-		22	4981
+		10	4981
 
 3. Run `unicantest` in *verbose* mode
 

@@ -120,6 +120,60 @@ static void print_canframe(struct canfd_frame *pf)
 	fflush(stdout);
 }
 
+static char sb[1 << 5];
+static char eb[1 << 14];	/* XXX: 16K, would use bit-vector. */
+
+void freeFrom(struct canfd_frame *pf)
+{
+	uint32_t cid;
+	uint32_t sfrom;
+	uint32_t efrom;
+	cid = pf->can_id;
+	if (cid & CAN_EFF_FLAG) {
+		efrom = (cid >> 14) & ((1 << 14) - 1);
+		eb[efrom] = 0;
+	} else {
+		sfrom = (cid >> 5) & ((1 << 5) - 1);
+		sb[sfrom] = 0;
+	}
+}
+
+int uniqFrom(struct canfd_frame *pf)
+{
+	int loops;
+	uint32_t cid;
+	uint32_t sfrom;
+	uint32_t efrom;
+	cid = pf->can_id;
+	if (cid & CAN_EFF_FLAG) {
+		/* mask 14-bit from address */
+		cid &= ~(((1 << 14) - 1) << 14);
+		/* obtain free 'ext-from' address (32 ... 2047) */
+		loops = (1 << 14) * 2;
+		do {
+			efrom = 32 + rng64() % ((1 << 14) - 32);
+		} while (loops-- && eb[efrom]);
+		if (!loops)
+			return -1;
+		eb[efrom] = 1;
+		cid |= efrom << 14;
+	} else {
+		/* mask 14-bit from address */
+		cid &= ~(((1 << 5) - 1) << 5);
+		/* obtain free 'std-from' address (0 ... 31) */
+		loops = (1 << 5) * 2;
+		do {
+			sfrom = rng64() % (1 << 5);
+		} while (loops-- && sb[sfrom]);
+		if (!loops)
+			return -1;
+		sb[sfrom] = 1;
+		cid |= sfrom << 5;
+	}
+	pf->can_id = cid;
+	return 0;
+}
+
 #define CONTEXT	int i;int ext;int prob;int dlc;uint16_t len;uint16_t crc;\
 struct canfd_frame frame;
 
@@ -143,6 +197,13 @@ struct canfd_frame *generator(crContParam)
 	} else {
 		c->frame.can_id &= CAN_SFF_MASK;
 		c->frame.can_id &= ~(1 << 10);
+	}
+
+	if (!c->prob) {
+		if (uniqFrom(&c->frame) < 0)
+			fprintf(stderr,
+				"warning: "
+				"could not obtain unique \"from\" address\n");
 	}
 
 	if (c->prob) {
@@ -203,6 +264,10 @@ struct canfd_frame *generator(crContParam)
 			}
 			crReturn(&c->frame);
 		}
+	}
+
+	if (!c->prob) {
+		freeFrom(&c->frame);
 	}
 
 	crFinish(NULL);
@@ -272,8 +337,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	for(i=0;i<argc;i++){
-		printf("%s%c", argv[i], i+1==argc? '\n' : ' ');
+	for (i = 0; i < argc; i++) {
+		printf("%s%c", argv[i], (i + 1) == argc ? '\n' : ' ');
 	}
 
 	while (G.count > 0) {
