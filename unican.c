@@ -66,8 +66,8 @@ void unican_drop_node(unican_node* node)
     {
       if (node->value->data != NULL)
       {
-        free(node->value->data);
         state.free_space += node->value->unican_length;
+        free(node->value->data);
       }
       free(node->value);
       state.free_space +=sizeof(unican_message);
@@ -137,7 +137,7 @@ static unican_node* unican_allocate_node(uint16 msg_id, uint16 from, uint16 to, 
 {
   if (state.is_online == UNICAN_ENABLED)
   {
-    if (state.free_space < data_len+sizeof(unican_message)+sizeof(unican_node))
+    if (state.free_space < (data_len+sizeof(unican_message)+sizeof(unican_node)))
       return NULL;
     else
     {
