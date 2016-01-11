@@ -266,7 +266,6 @@ static void unican_save_node (unican_node* node)
       crc = buff->node->value->data[len-2] + buff->node->value->data[len-1]*256;
       calc_crc = crc16(buff->node->value->data, len-2);
       buff->crc= calc_crc;
-      buff->node->value->unican_length = len-2;
       if (buff->crc == crc)
         unican_save_node(buff->node);
       else {
