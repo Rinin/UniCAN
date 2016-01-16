@@ -209,6 +209,7 @@ struct canfd_frame *generator(crContParam)
 	}
 
 	if (c->prob) {
+		*((uint64_t *) c->frame.data) = 0x0504030201000100ULL;
 		do {
 			c->frame.data[0] = rng64();
 			c->frame.data[1] = rng64();
