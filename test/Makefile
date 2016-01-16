@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -g -O2 -I. -Iinclude
+CFLAGS = -Wall -Wextra -Wno-strict-aliasing -g -O2 -I. -Iinclude
 
 LDLIBS = libcan.a
 

@@ -77,6 +77,7 @@ static const uint16_t crc16tab[] = {
 
 struct Global {
 	int ext;
+	int max;
 	int mix;
 	unsigned count;
 	unsigned gap;
@@ -97,6 +98,7 @@ static void usage(const char *prg)
 	printf("\n");
 	printf("  -e\t\t(generate extended (EFF) CAN frames, default is 'no')\n");
 	printf("  -g <ms>\t(inter-frame gap in milli seconds, default is %d ms)\n", G.gap);
+	printf("  -L\t\t(generate the most long messages, default is random length)\n");
 	printf("  -m\t\t(generate mix of SFF and EFF CAN frames, default is 'no')\n");
 	printf("  -M <bytes>\t(MTU for \"long\" UNICAN messages, default is %d bytes)\n", G.mtu);
 	printf("  -n <count>\t(terminate after <count> UNICAN frames, default infinitive)\n");
@@ -212,7 +214,10 @@ struct canfd_frame *generator(crContParam)
 			c->frame.data[1] = rng64();
 		} while ((c->frame.data[0] == 0xfe
 			  && c->frame.data[1] == 0xff));
-		c->frame.len = 2 + rng64() % 7;
+		if (G.max)
+			c->frame.len = 8;
+		else
+			c->frame.len = 2 + rng64() % 7;
 	} else {
 		c->frame.data[0] = 0xfffe % 256;
 		c->frame.data[1] = 0xfffe / 256;
@@ -287,10 +292,13 @@ int main(int argc, char *argv[])
 	G.prob = 20;
 	G.seed = 1ULL;
 
-	while ((opt = getopt(argc, argv, "eM:mN:n:p:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "eLM:mN:n:p:s:")) != -1) {
 		switch (opt) {
 		case 'e':
 			G.ext = 1;
+			break;
+		case 'L':
+			G.max = 1;
 			break;
 		case 'm':
 			G.mix = 1;
@@ -356,7 +364,10 @@ int main(int argc, char *argv[])
 				z[n]->ext = G.ext;
 			}
 			z[n]->frame.can_id = rng64();
-			z[n]->len = G.mtu ? rng64() % G.mtu : 0;
+			if (G.max)
+				z[n]->len = G.mtu;
+			else
+				z[n]->len = G.mtu ? rng64() % G.mtu : 0;
 			switch (G.prob) {
 			case 0:
 				z[n]->prob = 1;
@@ -376,7 +387,7 @@ int main(int argc, char *argv[])
 			print_canframe(pf);
 	}
 
-	for (i = 0; i < G.nodes; i++) {
+	for (i = 0; i < (int)G.nodes; i++) {
 		while (z[i]) {
 			pf = generator((void **)&z[i]);
 			if (pf)
