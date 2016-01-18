@@ -79,6 +79,7 @@ struct Global {
 	int ext;
 	int max;
 	int mix;
+	int rand;
 	unsigned count;
 	unsigned gap;
 	unsigned mtu;
@@ -104,6 +105,7 @@ static void usage(const char *prg)
 	printf("  -n <count>\t(terminate after <count> UNICAN frames, default infinitive)\n");
 	printf("  -N <number>\t(<number> of simultaneous issuers, default is %d)\n", G.nodes);
 	printf("  -p <percent>\t(specify <percent> of long UNICAN messages, default is %d%%)\n", G.prob);
+	printf("  -r\t\t(randomize payload, by default it is used incremental values)\n");
 	printf("  -s <seed>\t(specify seed to <seed> for PRNG, default is %llu)\n", G.seed);
 	printf("\n");
 
@@ -209,7 +211,10 @@ struct canfd_frame *generator(crContParam)
 	}
 
 	if (c->prob) {
-		*((uint64_t *) c->frame.data) = 0x0504030201000100ULL;
+		if (G.rand)
+			*((uint64_t *) c->frame.data) = rng64();
+		else
+			*((uint64_t *) c->frame.data) = 0x0504030201000100ULL;
 		do {
 			c->frame.data[0] = rng64();
 			c->frame.data[1] = rng64();
@@ -240,7 +245,10 @@ struct canfd_frame *generator(crContParam)
 		for (c->i = 0; c->i < c->len; c->i++) {
 			uint8_t *byte = &c->frame.data[c->i % 8];
 			uint16_t *crc = &c->crc;
-			*byte = c->i;
+			if (G.rand)
+				*byte = rng64() % 256;
+			else
+				*byte = c->i;
 			c->dlc++;
 			*crc = (*crc << 8) ^ crc16tab[(*crc >> 8) ^ *byte];
 			if (c->dlc == 8) {
@@ -293,7 +301,7 @@ int main(int argc, char *argv[])
 	G.prob = 20;
 	G.seed = 1ULL;
 
-	while ((opt = getopt(argc, argv, "eLM:mN:n:p:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "eLM:mN:n:p:rs:")) != -1) {
 		switch (opt) {
 		case 'e':
 			G.ext = 1;
@@ -315,6 +323,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'p':
 			G.prob = atoi(optarg);
+			break;
+		case 'r':
+			G.rand = 1;
 			break;
 		case 's':
 			G.seed = atoll(optarg);

@@ -8,12 +8,14 @@ LOBJS = lib.o canframelen.o rng64.o
 
 PROGS = unicanfuzz unicantest
 
+.PHONY: all
 all: $(LIB) $(PROGS)
 
 libcan.a: $(LOBJS)
 	ar cru $@ $^
 	ranlib $@
 
+.PHONY: clean
 clean:
 	rm -f $(LIB) $(LOBJS) $(PROGS) unican.c unican.h
 
@@ -26,5 +28,10 @@ unicanfuzz: unicanfuzz.c
 unicantest: unican.c unicantest.c
 	$(CC) $(CFLAGS) $^ $(LDLIBS) -o $@
 
+.PHONY: install
+install: all
+	cp unicanfuzz ~/bin
+
+.PHONY: test
 test: all
 	@tclsh test.tcl
