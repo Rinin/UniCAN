@@ -152,7 +152,7 @@ int uniqFrom(struct canfd_frame *pf)
 	if (cid & CAN_EFF_FLAG) {
 		/* mask 14-bit from address */
 		cid &= ~(((1 << 14) - 1) << 14);
-		/* obtain free 'ext-from' address (32 ... 2047) */
+		/* obtain free 'ext-from' address (32 ... 16383) */
 		loops = (1 << 14) * 2;
 		do {
 			efrom = 32 + rng64() % ((1 << 14) - 32);
@@ -301,10 +301,13 @@ int main(int argc, char *argv[])
 	G.prob = 20;
 	G.seed = 1ULL;
 
-	while ((opt = getopt(argc, argv, "eLM:mN:n:p:rs:")) != -1) {
+	while ((opt = getopt(argc, argv, "eg:LM:mN:n:p:rs:")) != -1) {
 		switch (opt) {
 		case 'e':
 			G.ext = 1;
+			break;
+		case 'g':
+			G.gap = atoi(optarg);
 			break;
 		case 'L':
 			G.max = 1;
