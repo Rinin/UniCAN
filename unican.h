@@ -5,7 +5,8 @@
 #include "unican_user.h"
 #include "unican_errcodes.h"
 #include "unican_msg_id.h"
-#include "UniCAN/drivers/IXXAT103/unican_hardware.h" //HARDWARE_INCLUDE
+#include "stm32f4xx.h"
+#include "unican_hardware_example.h" //HARDWARE_INCLUDE
 
 #define SERV
 #undef SERV
@@ -16,7 +17,7 @@
 
 #define CAN_MAX_DLC 8 //maximum value of data length code
 #define CAN_MIN_DLC 2 //minimum value of data length code
-#define UNICAN_HEADER_SIZE 8
+#define UNICAN_HEADER_SIZE 6
 #define UNICAN_ENABLED  1
 #define UNICAN_DISABLED 0
 //typedef struct tag_unican_message unican_message;
