@@ -53,7 +53,7 @@ typedef struct tag_unican_status
 typedef struct tag_unican_buffer
 {
   unican_node* node; //node with MSG accamulated in buffer
-  uint16 crc; // CRC of message, 0 for short messages
+//  uint16 crc; // CRC of message, 0 for short messages
   uint16 position; //Current position in buffer
 }  __attribute__ ((packed)) unican_buffer;
 

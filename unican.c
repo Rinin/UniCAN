@@ -106,7 +106,7 @@ static void unican_flush_buffers(void)
     if (node)
       unican_drop_node(node);
     unican_rx_buffers[i].position = 0;
-    unican_rx_buffers[i].crc = 0;
+    //unican_rx_buffers[i].crc = 0;
   }
 }
 
@@ -120,7 +120,7 @@ void unican_init (void)
   {
     unican_rx_buffers[i].node = NULL;
     unican_rx_buffers[i].position = 0;
-    unican_rx_buffers[i].crc = 0;
+    //unican_rx_buffers[i].crc = 0;
   }
   state.is_online = UNICAN_ENABLED;
   unican_flush_queue();
@@ -265,15 +265,15 @@ static void unican_save_node (unican_node* node)
       len = buff->node->value->unican_length;
       crc = buff->node->value->data[len-2] + buff->node->value->data[len-1]*256;
       calc_crc = crc16(buff->node->value->data, len-2);
-      buff->crc= calc_crc;
-      if (buff->crc == crc)
+      //buff->crc= calc_crc;
+      if (calc_crc == crc)//if (buff->crc == crc)
         unican_save_node(buff->node);
       else {
         unican_drop_node(buff->node);
         unican_error(UNICAN_WRONG_CRC);
       }
       buff->node = NULL;
-      buff->crc = 0x0000;
+      //buff->crc = 0x0000;
       buff->position = 0;
       state.free_buffers_count++;
     }
@@ -335,6 +335,9 @@ static void unican_save_node (unican_node* node)
       else if (buff->node == NULL)
         {
           unican_error(UNICAN_DATA_WITHOUT_START);
+          //buff->crc = 0x0000;
+          buff->position = 0;
+          state.free_buffers_count++;
           return;
         }
       else
