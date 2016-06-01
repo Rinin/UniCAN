@@ -5,8 +5,8 @@
 #include "unican_user.h"
 #include "unican_errcodes.h"
 #include "unican_msg_id.h"
-#include "stm32f4xx.h"
-#include "unican_hardware_example.h" //HARDWARE_INCLUDE
+#include "unican_hardware.h" //HARDWARE_INCLUDE
+#include <stdint.h>
 
 #define SERV
 #undef SERV
