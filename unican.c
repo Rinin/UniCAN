@@ -99,7 +99,7 @@ unican_node* current;
 */
 static void unican_flush_buffers(void)
 {
-  uint16_t i;
+  uint16 i;
   for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
   {
     unican_node *node = unican_rx_buffers[i].node;
