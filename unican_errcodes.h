@@ -1,8 +1,6 @@
-#ifndef UNICAN_ERRCODES_H_
-#define UNICAN_ERRCODES_H_
+#pragma once
 
 #define UNICAN_OK 0
-
 
 #define UNICAN_OFFLINE 1
 #define UNICAN_WARNING_BUFFER_OVERWRITE 2
@@ -25,5 +23,3 @@
 #define UNICAN_CANT_ALLOCATE_NODE 16
 
 #define UNICAN_HW_ERROR 17
-
-#endif /* UNICAN_ERRCODES_H_ */

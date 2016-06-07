@@ -1,6 +1,4 @@
-#ifndef UNICAN_MESSAGE_ID_H_
-#define UNICAN_MESSAGE_ID_H_
+#pragma once
 
 #define UNICAN_START_LONG_MESSAGE 0xFFFE
 
-#endif /* UNICAN_MESSAGE_ID_H_ */
