@@ -10,7 +10,7 @@ you will not want to do a lot of work here
 void unican_RX_event (uint16 msg_id, uint16 length)
 {
   /* User code */
-
+	diag_printf("Received unican message Id = %d; Length = %d\n",msg_id,length);
   /*end of user code*/
 }
 

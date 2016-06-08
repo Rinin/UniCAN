@@ -512,8 +512,8 @@ void unican_send_message (unican_message* msg)
       can_buff.data[1] = UINT16LEFT ( UNICAN_START_LONG_MESSAGE );
       can_buff.data[2] = UINT16RIGHT ( msg->unican_msg_id );
       can_buff.data[3] = UINT16LEFT ( msg->unican_msg_id );
-      can_buff.data[4] = UINT16RIGHT ( msg->unican_length );
-      can_buff.data[5] = UINT16LEFT ( msg->unican_length );
+      can_buff.data[4] = UINT16RIGHT ( msg->unican_length + CAN_MIN_DLC);
+      can_buff.data[5] = UINT16LEFT ( msg->unican_length + CAN_MIN_DLC);
 
       can_send_message (&can_buff);
       
