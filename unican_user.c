@@ -10,7 +10,8 @@ you will not want to do a lot of work here
 void unican_RX_event (uint16 msg_id, uint16 length)
 {
   /* User code */
-	diag_printf("Received unican message Id = %d; Length = %d\n",msg_id,length);
+	unican_take_message();
+	//diag_printf("Received unican message Id = %d; Length = %d\n",msg_id,length);
   /*end of user code*/
 }
 
@@ -22,6 +23,30 @@ device.
 void unican_RX_message (unican_message* msg)
 {
   /* User code */
+
+	switch (msg->unican_msg_id)
+	{
+		case AVS_TELEMETRY_X:
+		{
+
+			float val;
+			cyg_int32 val2;
+			cyg_int8 temp;
+			temp = msg->data[5];
+			val = *((float*)(&(msg->data[0])));
+			val2 = val * 1000;
+			diag_printf("X val = %d;\t X temp = %d\n",val2, temp);
+
+		} break;
+		case AVS_TELEMETRY_Y:
+		{
+
+		} break;
+		case AVS_TELEMETRY_Z:
+		{
+
+		} break;
+	}
 
   /*end of user code*/
 }
