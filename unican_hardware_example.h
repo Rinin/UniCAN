@@ -3,10 +3,10 @@
 #include "stm32f4xx_rcc.h"
 
 #define UINT16LEFT(val) \
-  ((val >> 8) & 0x00FF)
+  (((val) >> 8) & 0x00FF)
   
 #define UINT16RIGHT(val) \
-  (val & 0x00FF)
+  ((val) & 0x00FF)
   
 #define CAN_STANDART_HEADER CAN_Id_Standard
 #define CAN_EXTENDED_HEADER CAN_Id_Extended
@@ -32,5 +32,6 @@ void can_HW_init (void);                     //HW implementation
 void can_HW_receive_message (void);          //HW implementation, may be changed.
 void can_HW_send_message (can_message* msg); //HW implementation
 void can_HW_close(void);                     //HW implementation
+
 
 

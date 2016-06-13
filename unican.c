@@ -483,6 +483,7 @@ void unican_take_message (void)
 
 void unican_send_message (unican_message* msg)
 {
+
 	can_message can_buff;
 	unsigned int i;
 	if (state.is_online == UNICAN_ENABLED)
@@ -508,10 +509,8 @@ void unican_send_message (unican_message* msg)
 			can_buff.data[1] = UINT16LEFT ( UNICAN_START_LONG_MESSAGE );
 			can_buff.data[2] = UINT16RIGHT ( msg->unican_msg_id );
 			can_buff.data[3] = UINT16LEFT ( msg->unican_msg_id );
-			can_buff.data[4] = UINT16RIGHT ( msg->unican_length );
-			can_buff.data[5] = UINT16LEFT ( msg->unican_length );
-
-			can_send_message (&can_buff);
+			can_buff.data[4] = UINT16RIGHT ( msg->unican_length + CAN_MIN_DLC);
+			can_buff.data[5] = UINT16LEFT ( msg->unican_length + CAN_MIN_DLC);
 
 			can_set_identifier(msg, &can_buff, 1);  //could be optimized
 			for (i = 0; i < msg->unican_length; i++)
@@ -566,3 +565,4 @@ void unican_close (void)
 	unican_flush_buffers();
 	can_HW_close();
 }
+
