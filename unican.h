@@ -1,15 +1,11 @@
-#ifndef UNICAN_H_
-#define UNICAN_H_
+#pragma once
 
+#include "stdint.h"
 #include "unican_setup.h"
 #include "unican_user.h"
 #include "unican_errcodes.h"
 #include "unican_msg_id.h"
-#include "stm32f4xx.h"
-#include "unican_hardware_example.h" //HARDWARE_INCLUDE
-
-#define SERV
-#undef SERV
+#include "unican_hardware_example.h"
 
 #ifndef NULL
 #define NULL (void*)0
@@ -24,11 +20,11 @@
 
 typedef struct tag_unican_message
 {
-  uint16 unican_msg_id; //MSG_ID of unican message
-  uint16 unican_address_from; // address of sender in sattelite network
-  uint16 unican_address_to; // address of receiver in sattelite network
-  uint16 unican_length; //length of data
-  uint8* data; //pointer to data field
+  uint16_t unican_msg_id; //MSG_ID of unican message
+  uint16_t unican_address_from; // address of sender in sattelite network
+  uint16_t unican_address_to; // address of receiver in sattelite network
+  uint16_t unican_length; //length of data
+  uint8_t * data; //pointer to data field
 }  __attribute__ ((packed)) unican_message;
 
 typedef struct tag_unican_node unican_node;
@@ -41,10 +37,10 @@ struct tag_unican_node
 
 typedef struct tag_unican_status
 {
-  uint8 is_online;
-  uint32 free_space; 
-  uint32 nodes_count;
-  uint16 free_buffers_count;
+  uint8_t is_online;
+  uint32_t free_space;
+  uint32_t nodes_count;
+  uint16_t free_buffers_count;
   unican_node* first;
   unican_node* last;
   
@@ -53,11 +49,13 @@ typedef struct tag_unican_status
 typedef struct tag_unican_buffer
 {
   unican_node* node; //node with MSG accamulated in buffer
-  uint16 crc; // CRC of message, 0 for short messages
-  uint16 position; //Current position in buffer
+  uint16_t position; //Current position in buffer
 }  __attribute__ ((packed)) unican_buffer;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void unican_init (void);
 void unican_close (void);
 
@@ -68,4 +66,6 @@ void unican_send_message (unican_message* msg);
 
 void unican_drop_node(unican_node* node);
 
-#endif /* UNICAN_H_ */
+#ifdef __cplusplus
+}
+#endif
