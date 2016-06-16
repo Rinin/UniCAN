@@ -509,11 +509,11 @@ void unican_send_message (unican_message* msg)
       crc = crc16( msg->data, msg->unican_length );
       can_buff.can_dlc = 6;
       can_buff.data[0] = UINT16RIGHT ( UNICAN_START_LONG_MESSAGE );
-      can_buff.data[1] = UINT16LEFT ( UNICAN_START_LONG_MESSAGE );
+      can_buff.data[1] = UINT16LEFT  ( UNICAN_START_LONG_MESSAGE );
       can_buff.data[2] = UINT16RIGHT ( msg->unican_msg_id );
-      can_buff.data[3] = UINT16LEFT ( msg->unican_msg_id );
+      can_buff.data[3] = UINT16LEFT  ( msg->unican_msg_id );
       can_buff.data[4] = UINT16RIGHT ( msg->unican_length + CAN_MIN_DLC);
-      can_buff.data[5] = UINT16LEFT ( msg->unican_length + CAN_MIN_DLC);
+      can_buff.data[5] = UINT16LEFT  ( msg->unican_length + CAN_MIN_DLC);
 
       can_send_message (&can_buff);
       
@@ -553,7 +553,9 @@ void unican_send_message (unican_message* msg)
     }
   }
 }
-
+/*
+ *
+ */
 void can_send_message (can_message* msg)
 {
   if (state.is_online == UNICAN_ENABLED)
@@ -561,7 +563,9 @@ void can_send_message (can_message* msg)
     can_HW_send_message (msg);
   }
 }
-
+/*
+ *
+ */
 void unican_close (void)
 {
   state.is_online = UNICAN_DISABLED;

@@ -1,4 +1,5 @@
 #include "unican.h"
+#include "state_machine.h"
 //TODO:Check all this terrible english comments
 
 /*
@@ -43,6 +44,18 @@ void unican_RX_message (unican_message* msg)
 
 		} break;
 		case AVS_TELEMETRY_Z:
+		{
+
+		} break;
+		case MACHINE_SWITCH_TO_STATE_1:
+		{
+			SM_machine_request_state(SM_STATE_IDLE);
+		} break;
+		case MACHINE_SWITCH_TO_STATE_2:
+		{
+			SM_machine_request_state(SM_STATE_1);
+		} break;
+		default:
 		{
 
 		} break;
