@@ -1,5 +1,7 @@
 #include "unican.h"
 #include "state_machine.h"
+#include "telemetry.h"
+#include "obc_setup.h"
 //TODO:Check all this terrible english comments
 
 /*
@@ -27,33 +29,41 @@ void unican_RX_message (unican_message* msg)
 
 	switch (msg->unican_msg_id)
 	{
-		case AVS_TELEMETRY_X:
+		case UNICAN_AVS_TELEMETRY_X:
 		{
-
-			float val;
-			cyg_int32 val2;
-			cyg_int8 temp;
-			temp = msg->data[5];
-			val = *((float*)(&(msg->data[0])));
-			val2 = val * 1000;
-			diag_printf("X val = %d;\t X temp = %d\n",val2, temp);
-
+			magnetic_data data;
+			data.temp = msg->data[5];
+			data.val = *((float*)(&(msg->data[0])));
+			add_magnetic_data (&data, 0);
 		} break;
-		case AVS_TELEMETRY_Y:
+		case UNICAN_AVS_TELEMETRY_Y:
 		{
-
+			magnetic_data data;
+			data.temp = msg->data[5];
+			data.val = *((float*)(&(msg->data[0])));
+			add_magnetic_data (&data, 1);
 		} break;
-		case AVS_TELEMETRY_Z:
+		case UNICAN_AVS_TELEMETRY_Z:
 		{
-
+			magnetic_data data;
+			data.temp = msg->data[5];
+			data.val = *((float*)(&(msg->data[0])));
+			add_magnetic_data (&data, 2);
 		} break;
-		case MACHINE_SWITCH_TO_STATE_1:
+		case UNICAN_MACHINE_SWITCH_TO_STATE_IDLE:
 		{
+			diag_printf("Switch to state IDLE\n");
 			SM_machine_request_state(SM_STATE_IDLE);
 		} break;
-		case MACHINE_SWITCH_TO_STATE_2:
+		case UNICAN_MACHINE_SWITCH_TO_STATE_1:
 		{
+			diag_printf("Switch to state 1\n");
 			SM_machine_request_state(SM_STATE_1);
+		} break;
+		case UNICAN_MACHINE_SWITCH_TO_STATE_2:
+		{
+			diag_printf("Switch to state 2\n");
+			SM_machine_request_state(SM_STATE_2);
 		} break;
 		default:
 		{
