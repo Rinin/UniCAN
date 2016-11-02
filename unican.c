@@ -99,7 +99,7 @@ unican_node* current;
 */
 static void unican_flush_buffers(void)
 {
-  uint16_t i;
+  uint16 i;
   for (i=0; i < UNICAN_RX_BUFFERS_COUNT; i++)
   {
     unican_node *node = unican_rx_buffers[i].node;
@@ -531,8 +531,8 @@ void unican_send_message (unican_message* msg)
       {
     	  can_buff.can_dlc = i % 8;
     	if ((i % 8) < 7) {
-    	    can_buff.data[i%8+1] = UINT16RIGHT ( crc );
-    	    can_buff.data[i%8+2] = UINT16LEFT ( crc );
+    	    can_buff.data[i%8] = UINT16RIGHT ( crc );
+    	    can_buff.data[i%8+1] = UINT16LEFT ( crc );
     	    can_buff.can_dlc+=2;
     	    can_send_message (&can_buff);
 		} else {
