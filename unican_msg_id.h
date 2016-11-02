@@ -2,13 +2,27 @@
 #define UNICAN_MESSAGE_ID_H_
 
 
-#define UNICAN_AVS_TELEMETRY_X 0x0B10
-#define UNICAN_AVS_TELEMETRY_Y 0x0B11
-#define UNICAN_AVS_TELEMETRY_Z 0x0B12
+#define UNICAN_RATESENSOR_TELEMETRY_X 0x0B10
+#define UNICAN_RATESENSOR_TELEMETRY_Y 0x0B11
+#define UNICAN_RATESENSOR_TELEMETRY_Z 0x0B12
 
-#define UNICAN_MACHINE_SWITCH_TO_STATE_IDLE 0xF000
-#define UNICAN_MACHINE_SWITCH_TO_STATE_1 0xF001
-#define UNICAN_MACHINE_SWITCH_TO_STATE_2 0xF002
+#define UNICAN_MAGSENSOR_TELEMETRY_X 0x0B13
+#define UNICAN_MAGSENSOR_TELEMETRY_Y 0x0B14
+#define UNICAN_MAGSENSOR_TELEMETRY_Z 0x0B15
+
+#define UNICAN_MACHINE_SWITCH_TO_STATE_IDLE         0xF000
+#define UNICAN_MACHINE_SWITCH_TO_STATE_1            0xF001
+#define UNICAN_MACHINE_SWITCH_TO_STATE_2            0xF002
+
+#define UNICAN_CONFIG_SET_RATES_OFFSET_X            0xF100
+#define UNICAN_CONFIG_SET_RATES_OFFSET_Y            0xF101
+#define UNICAN_CONFIG_SET_RATES_OFFSET_Z            0xF102
+
+#define UNICAN_CONFIG_SET_MAG_OFFSET_X              0xF110
+#define UNICAN_CONFIG_SET_MAG_OFFSET_Y              0xF111
+#define UNICAN_CONFIG_SET_MAG_OFFSET_Z              0xF112
+
+#define UNICAN_ORIENTATION_REGULAR_TELEMETRY        0xFF00
 
 //Управление скоростью (об/мин)
 #define UNICAN_WHEEL_CMD_ANGULAR_RATE				0x0A01
@@ -37,8 +51,37 @@
 //Установить Дифференциальный коэффициент																	<- FLASH
 #define UNICAN_WHEEL_SET_PID_DIFF_KOEFF				0x0A66
 //Записать новые настройки во FLASH																			<- FLASH
-
 #define UNICAN_WHEEL_PROGRAMM_SETTINGS				0x0A60
+
+//Ответ телеметрии маховика со скоростью
+#define UNICAN_WHEEL_SPEED          	            0x0AD1
+//Ответ телеметрии маховика с моментом
+#define UNICAN_WHEEL_TORQUE         	            0x0AD2
+
+//Задать максимум катушки X
+#define UNICAN_EMD_MAX_X                            0x0003
+//Задать минимум катушки X
+#define UNICAN_EMD_MIN_X                            0x0004
+//Задать ноль катушки X
+#define UNICAN_EMD_ZERO_X                           0x0005
+
+//Задать максимум катушки Y
+#define UNICAN_EMD_MAX_Y                            0x0006
+//Задать минимум катушки Y
+#define UNICAN_EMD_MIN_Y                            0x0007
+//Задать ноль катушки Y
+#define UNICAN_EMD_ZERO_Y                           0x0008
+
+//Задать максимум катушки Z
+#define UNICAN_EMD_MAX_Z                            0x0009
+//Задать минимум катушки Z
+#define UNICAN_EMD_MIN_Z                            0x000A
+//Задать ноль катушки Z
+#define UNICAN_EMD_ZERO_Z                           0x000B
+
+//Задать ноль всвем катушкам
+#define UNICAN_EMD_ZERO_ALL                         0x000C
+
 
 #define UNICAN_START_LONG_MESSAGE 0xFFFE
 
