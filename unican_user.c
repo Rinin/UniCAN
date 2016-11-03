@@ -2,6 +2,8 @@
 #include "state_machine.h"
 #include "telemetry.h"
 #include "obc_setup.h"
+#include "SpaceCraft.h"
+#include "globals.h"
 
 //TODO:Check all this terrible english comments
 
@@ -82,47 +84,70 @@ void unican_RX_message (unican_message* msg)
 		} break;
 
 
-		case UNICAN_MACHINE_SWITCH_TO_STATE_IDLE:
+		case UNICAN_ADCU_MACHINE_SWITCH_TO_STATE_IDLE:
 		{
-			//diag_printf("Switch to state IDLE\n");
+			diag_printf("Switch to state IDLE\n");
 			SM_machine_request_state(SM_STATE_IDLE);
 		} break;
-		case UNICAN_MACHINE_SWITCH_TO_STATE_1:
+		case UNICAN_ADCU_MACHINE_SWITCH_TO_STATE_BDOT:
 		{
-			//diag_printf("Switch to state 1\n");
+			diag_printf("Switch to state BDot\n");
 			SM_machine_request_state(SM_STATE_BDot);
 		} break;
-		case UNICAN_MACHINE_SWITCH_TO_STATE_2:
+		case UNICAN_ADCU_MACHINE_SWITCH_TO_STATE_TRIAD:
 		{
-			//diag_printf("Switch to state 2\n");
+			diag_printf("Switch to state Triad\n");
 			SM_machine_request_state(SM_STATE_Triad);
 		} break;
+        case UNICAN_ADCU_MACHINE_SWITCH_TO_STATE_OBSERVE:
+        {
+            diag_printf("Switch to state Observe\n");
+            SM_machine_request_state(SM_STATE_Observe);
+        } break;
 
-		case UNICAN_CONFIG_SET_RATES_OFFSET_X:
+        case UNICAN_ADCU_TRIAD_SET_ANGLES:
+        {
+            char buff_string[256];
+
+            sprintf(buff_string, "Setting angles Vec = %f %f %f \n",((vec*)(&(msg->data[0])))->x, ((vec*)(&(msg->data[0])))->y, ((vec*)(&(msg->data[0])))->z);
+            diag_printf("%s", buff_string);
+
+            SpaceCraft * Sat;
+            Sat = get_sat();
+            SPACECRAFT_set_target_euler_angles_orientation(Sat, (vec*)(&(msg->data[0])) );
+
+        } break;
+
+		case UNICAN_ADCU_CONFIG_SET_RATES_OFFSET_X:
 		{
 			ratesensor_set_offset (0,*(float*)(&(msg->data[0])) );
 		} break;
-		case UNICAN_CONFIG_SET_RATES_OFFSET_Y:
+		case UNICAN_ADCU_CONFIG_SET_RATES_OFFSET_Y:
 		{
 			ratesensor_set_offset (1,*(float*)(&(msg->data[0])) );
 		} break;
-		case UNICAN_CONFIG_SET_RATES_OFFSET_Z:
+		case UNICAN_ADCU_CONFIG_SET_RATES_OFFSET_Z:
 		{
 			ratesensor_set_offset (2,*(float*)(&(msg->data[0])) );
 		} break;
 
-		case UNICAN_CONFIG_SET_MAG_OFFSET_X:
+		case UNICAN_ADCU_CONFIG_SET_MAG_OFFSET_X:
 		{
 			magsensor_set_offset (0,*(float*)(&(msg->data[0])) );
 		} break;
-		case UNICAN_CONFIG_SET_MAG_OFFSET_Y:
+		case UNICAN_ADCU_CONFIG_SET_MAG_OFFSET_Y:
 		{
 			magsensor_set_offset (1,*(float*)(&(msg->data[0])) );
 		} break;
-		case UNICAN_CONFIG_SET_MAG_OFFSET_Z:
+		case UNICAN_ADCU_CONFIG_SET_MAG_OFFSET_Z:
 		{
 			magsensor_set_offset (2,*(float*)(&(msg->data[0])) );
 		} break;
+
+        case UNICAN_ADCU_SET_REGULAR_TELEMETRY_TIMEOUT:
+        {
+            telemetry_set_delay (*(uint16*)(&(msg->data[0])) );
+        } break;
 
 
 		case UNICAN_WHEEL_SPEED:
