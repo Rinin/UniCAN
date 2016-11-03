@@ -339,7 +339,7 @@ static void unican_save_node (unican_node* node)
         }
       else
       {
-        //printf("normal message with data\n");
+        diag_printf("normal message with data\n");
         for (i=0 ; i < msg->can_dlc ; i++)
         {
           if (buff->position < buff->node->value->unican_length)
@@ -380,7 +380,7 @@ static void unican_save_node (unican_node* node)
         //Some protocol-specific short messages
         case UNICAN_START_LONG_MESSAGE:
         {
-          //printf("Start of transmission\n");
+            diag_printf("Start of transmission\n");
           if (msg->can_dlc < UNICAN_HEADER_SIZE)
           {
             unican_error(UNICAN_HEADER_TOO_SHORT);

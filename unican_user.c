@@ -184,7 +184,35 @@ reaction to errors in unican
 */
 void unican_error (uint16 errcode)
 {
-  
+
+    switch (errcode)
+    {
+        case UNICAN_OFFLINE:
+        {
+            diag_printf("UNICAN_OFFLINE\n");
+        } break;
+        case UNICAN_WARNING_BUFFER_OVERWRITE:
+        {
+            diag_printf("UNICAN_WARNING_BUFFER_OVERWRITE\n");
+        } break;
+        case UNICAN_WRONG_CRC:
+        {
+            diag_printf("UNICAN_WRONG_CRC\n");
+        } break;
+        case UNICAN_NO_FREE_BUFFER:
+        {
+            diag_printf("UNICAN_NO_FREE_BUFFER\n");
+        } break;
+        case UNICAN_DATA_WITHOUT_START:
+        {
+            diag_printf("UNICAN_DATA_WITHOUT_START\n");
+        } break;
+        case UNICAN_WARNING_UNEXPECTED_DATA:
+        {
+            diag_printf("UNICAN_WARNING_UNEXPECTED_DATA\n");
+        } break;
+    }
+
   /* User code */
 
   /*end of user code*/
