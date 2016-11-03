@@ -2,10 +2,10 @@
 #define UNICAN_HARDWARE_H_
 
 #define UINT16LEFT(val) \
-  ((val >> 8) & 0x00FF)
+  (((val) >> 8) & 0x00FF)
   
 #define UINT16RIGHT(val) \
-  (val & 0x00FF)
+  ((val) & 0x00FF)
   
 #define CAN_STANDART_HEADER 0
 #define CAN_EXTENDED_HEADER 1
