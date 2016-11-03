@@ -2,7 +2,14 @@
 
 //TODO: Test on application
 
-static unican_status state;
+static unican_status state = {
+        .is_online = UNICAN_DISABLED,
+        .free_space = 0,
+        .nodes_count = 0,
+        .free_buffers_count = 0,
+        .first = 0,
+        .last = 0,
+};
 static unican_buffer unican_rx_buffers [UNICAN_RX_BUFFERS_COUNT];
 
 
@@ -122,11 +129,10 @@ void unican_init (void)
     unican_rx_buffers[i].position = 0;
     unican_rx_buffers[i].crc = 0;
   }
-  state.is_online = UNICAN_ENABLED;
   unican_flush_queue();
   state.free_space = UNICAN_ALLOWED_SPACE;  
   state.free_buffers_count = UNICAN_RX_BUFFERS_COUNT;
-  
+  state.is_online = UNICAN_ENABLED;
   can_HW_init();
 }
 
