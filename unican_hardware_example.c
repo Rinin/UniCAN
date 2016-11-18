@@ -1,5 +1,8 @@
 #include "unican.h"
 #include "unican_hardware_example.h"
+#include "stm32f4xx_can.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_gpio.h"
 
 Typdef_CAN_HW_TX_buf CAN1_HW_TX_buf={
 		.NowCanBufPoint=0,
@@ -53,7 +56,7 @@ void can_filter_init(uint16_t CAN_ID, uint8_t CAN_FilterScale)
 	CAN_FilterInit(&CAN_FilterInitStructure);
 }
 
-void can_HW_init (void)
+void can_HW_init(void)
 {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
@@ -89,11 +92,17 @@ void can_HW_init (void)
 	CAN_InitStructure.CAN_Prescaler = 5;
 	CAN_Init(CAN1, &CAN_InitStructure);
 
-	can_filter_init(UNICAN_ID, CAN_FilterScale_16bit);
+	CAN_Auto_Buss_OFF_recovery_enable(CAN1);
+
+	can_filter_init(UNICAN_DEFAULT_SELF_ID, CAN_FilterScale_16bit);
 	CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
 	CAN_ITConfig(CAN1, CAN_IT_TME, ENABLE);
 	NVIC_EnableIRQ(CAN1_RX0_IRQn);
 	/*end of user code*/
+}
+
+void CAN_Auto_Buss_OFF_recovery_enable(CAN_TypeDef *CANx){
+	CANx->MCR |= CAN_MCR_ABOM;
 }
 
 void can_HW_close(void)
@@ -170,6 +179,3 @@ void can_HW_send_message (can_message* msg)
 
 	CAN1_HW_TX_buf.LastCanBufPoint += 1;
 }
-
-
-

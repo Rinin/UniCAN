@@ -565,4 +565,3 @@ void unican_close (void)
 	unican_flush_buffers();
 	can_HW_close();
 }
-

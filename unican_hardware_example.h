@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_can.h"
 
 #define UINT16LEFT(val) \
   (((val) >> 8) & 0x00FF)
@@ -27,11 +27,10 @@ typedef struct tag_can_message
   volatile uint8_t data[8];                    // Data field
 }  __attribute__ ((packed)) can_message;
 
+void CAN_Auto_Buss_OFF_recovery_enable(CAN_TypeDef *CANx);
+void can_filter_init(uint16_t CAN_ID, uint8_t CAN_FilterScale);
 void can_send_message (can_message* msg);
 void can_HW_init (void);                     //HW implementation
 void can_HW_receive_message (void);          //HW implementation, may be changed.
 void can_HW_send_message (can_message* msg); //HW implementation
 void can_HW_close(void);                     //HW implementation
-
-
-
